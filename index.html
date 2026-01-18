@@ -1,1 +1,126 @@
 
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test API CSV - Google Apps Script</title>
+    <style>
+        :root {
+            --primary: #059669;
+            --bg: #f0fdf4;
+            --text: #064e3b;
+        }
+
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 2rem;
+        }
+
+        .card {
+            background: white;
+            padding: 2rem;
+            border-radius: 1rem;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 600px;
+            text-align: center;
+        }
+
+        #loader {
+            display: none;
+            margin: 1rem 0;
+            color: #059669;
+            font-weight: bold;
+        }
+
+        button {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.1s;
+        }
+
+        button:active { transform: scale(0.98); }
+
+        pre {
+            text-align: left;
+            background: #1e293b;
+            color: #f8fafc;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            overflow-x: auto;
+            font-size: 0.85rem;
+            margin-top: 1.5rem;
+        }
+
+        .error { color: #dc2626; background: #fee2e2; padding: 1rem; border-radius: 0.5rem; }
+    </style>
+</head>
+<body>
+
+<div class="card">
+    <h1>🚀 Test de Connexion API</h1>
+    <p>Cliquez sur le bouton pour lire les données du CSV via Google Apps Script.</p>
+    
+    <button id="fetchBtn">Interroger le CSV</button>
+    
+    <div id="loader">Chargement en cours...</div>
+    <div id="result"></div>
+</div>
+
+<script>
+{
+    // CONFIGURATION : Collez ici l'URL obtenue après le déploiement de votre Google Script
+    const SCRIPT_URL = "VOTRE_URL_SCRIPT_ICI";
+
+    const btn = document.getElementById('fetchBtn');
+    const loader = document.getElementById('loader');
+    const resultDiv = document.getElementById('result');
+
+    btn.addEventListener('click', async () => {
+        if (SCRIPT_URL === "VOTRE_URL_SCRIPT_ICI") {
+            resultDiv.innerHTML = '<p class="error">⚠️ Erreur : Vous devez coller votre URL de script dans le code JS à la ligne 67.</p>';
+            return;
+        }
+
+        loader.style.display = 'block';
+        resultDiv.innerHTML = '';
+        
+        try {
+            const response = await fetch(SCRIPT_URL);
+            
+            if (!response.ok) throw new Error(`Erreur HTTP: ${response.status}`);
+            
+            const data = await response.json();
+            
+            resultDiv.innerHTML = `
+                <h3>✅ Données reçues :</h3>
+                <pre>${JSON.stringify(data, null, 2)}</pre>
+            `;
+        } catch (error) {
+            console.error(error);
+            resultDiv.innerHTML = `
+                <div class="error">
+                    <strong>Erreur de connexion</strong><br>
+                    ${error.message}<br><br>
+                    <small>Vérifiez que le script est déployé en "Anyone" (Tous le monde).</small>
+                </div>`;
+        } finally {
+            loader.style.display = 'none';
+        }
+    });
+}
+</script>
+
+</body>
+</html>
