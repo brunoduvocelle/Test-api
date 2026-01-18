@@ -1,37 +1,36 @@
-
-
 <!DOCTYPE html>
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
     <title>Gestion des Contacts API</title>
     <style>
-        :root { --primary: #3498db; --success: #27ae60; --dark: #2c3e50; }
+        :root { --primary: #3498db; --success: #27ae60; --danger: #e74c3c; --dark: #2c3e50; }
         body { font-family: 'Segoe UI', sans-serif; background: #f4f7f6; padding: 20px; color: var(--dark); }
-        .container { background: white; padding: 30px; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); width: 100%; max-width: 600px; margin: auto; }
+        .container { background: white; padding: 30px; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); width: 100%; max-width: 650px; margin: auto; }
         
-        /* Formulaire */
         .form-group { margin-bottom: 15px; }
         label { display: block; margin-bottom: 5px; font-weight: bold; }
         input { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; }
         
         .btn-group { display: flex; gap: 10px; margin-top: 20px; }
-        button { flex: 1; border: none; padding: 12px; border-radius: 8px; cursor: pointer; font-size: 16px; color: white; transition: opacity 0.2s; }
+        button { flex: 1; border: none; padding: 12px; border-radius: 8px; cursor: pointer; font-size: 16px; color: white; transition: 0.2s; }
         #addBtn { background: var(--success); }
         #loadBtn { background: var(--primary); }
+        button:hover { opacity: 0.8; }
         button:disabled { opacity: 0.5; cursor: not-allowed; }
 
-        /* Tableau */
         table { width: 100%; border-collapse: collapse; margin-top: 30px; }
         th { background: var(--dark); color: white; text-align: left; padding: 12px; }
         td { padding: 12px; border-bottom: 1px solid #ddd; }
+        
+        .delete-btn { background: var(--danger); padding: 5px 10px; font-size: 12px; width: auto; flex: none; }
         .loading { text-align: center; font-style: italic; color: #7f8c8d; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h1>📝 Ajouter un Contact</h1>
+    <h1>📝 Gestion des Contacts</h1>
     
     <form id="contactForm">
         <div class="form-group">
@@ -69,16 +68,21 @@
     const display = document.getElementById('display');
     const status = document.getElementById('status');
 
-    // FONCTION : LIRE (GET)
+    // LIRE
     const loadData = async () => {
         display.innerHTML = '<p class="loading">Chargement des données...</p>';
         try {
             const response = await fetch(SCRIPT_URL);
             const data = await response.json();
             
-            let html = `<table><tr><th>Nom</th><th>Prénom</th><th>Email</th></tr>`;
+            let html = `<table><tr><th>Nom</th><th>Prénom</th><th>Email</th><th>Action</th></tr>`;
             data.forEach(item => {
-                html += `<tr><td>${item.nom}</td><td>${item.prenom}</td><td>${item.mail}</td></tr>`;
+                html += `<tr>
+                    <td>${item.nom}</td>
+                    <td>${item.prenom}</td>
+                    <td>${item.mail}</td>
+                    <td><button class="delete-btn" onclick="deleteContact('${item.mail}')">Supprimer</button></td>
+                </tr>`;
             });
             display.innerHTML = html + `</table>`;
         } catch (e) {
@@ -86,7 +90,7 @@
         }
     };
 
-    // FONCTION : ÉCRIRE (POST)
+    // AJOUTER
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
         const btn = document.getElementById('addBtn');
@@ -103,15 +107,14 @@
         try {
             await fetch(SCRIPT_URL, {
                 method: 'POST',
-                mode: 'no-cors', // Important pour Google Script
-                cache: 'no-cache',
+                mode: 'no-cors',
                 body: JSON.stringify(formData)
             });
 
             status.innerText = "✅ Ajouté avec succès !";
             status.style.color = "green";
             form.reset();
-            setTimeout(() => { status.innerText = ""; loadData(); }, 2000);
+            setTimeout(() => { status.innerText = ""; loadData(); }, 1500);
         } catch (error) {
             status.innerText = "❌ Erreur d'envoi.";
             status.style.color = "red";
@@ -120,9 +123,31 @@
         }
     });
 
+    // SUPPRIMER (Fonction globale pour être appelée par onclick)
+    window.deleteContact = async (email) => {
+        if (!confirm("Voulez-vous vraiment supprimer " + email + " ?")) return;
+        
+        status.innerText = "🗑️ Suppression en cours...";
+        status.style.color = "red";
+
+        try {
+            await fetch(SCRIPT_URL, {
+                method: 'POST',
+                mode: 'no-cors',
+                body: JSON.stringify({ action: "delete", mail: email })
+            });
+            
+            setTimeout(() => { 
+                status.innerText = "✅ Supprimé !";
+                loadData(); 
+            }, 1000);
+        } catch (error) {
+            status.innerText = "❌ Erreur de suppression.";
+        }
+    };
+
     document.getElementById('loadBtn').addEventListener('click', loadData);
 }
 </script>
 </body>
 </html>
-
